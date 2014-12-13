@@ -10,8 +10,7 @@ import (
 )
 
 var (
-	kernel32, _        = syscall.LoadLibrary("kernel32.dll")
-	getModuleHandle, _ = syscall.GetProcAddress(kernel32, "GetModuleHandleW")
+	kernel32, _ = syscall.LoadLibrary("kernel32.dll")
 )
 
 type Dll struct {
@@ -113,21 +112,50 @@ func (p *Dll) Call(funcName string, funcParams ...interface{}) (result FuncCallR
 
 	for parmIndex, param := range funcParams {
 		var vPtr uintptr = 0
-		if strV, ok := param.(string); ok {
-			vPtr = uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(strV)))
-		} else if stringPtrV, ok := param.(*string); ok {
-			vPtr = uintptr(unsafe.Pointer(syscall.StringBytePtr(*stringPtrV)))
-		} else if uint8ptrV, ok := param.(*uint8); ok {
-			vPtr = uintptr(unsafe.Pointer(uint8ptrV))
-		} else if intV, ok := param.(int); ok {
-			vPtr = uintptr(intV)
-		} else if int32V, ok := param.(int32); ok {
-			vPtr = uintptr(int32V)
-		} else if int64V, ok := param.(int64); ok {
-			vPtr = uintptr(int64V)
-		} else if uintPtrV, ok := param.(uintptr); ok {
-			vPtr = uintPtrV
-		} else {
+
+		switch v := param.(type) {
+		case string:
+			vPtr = uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(v)))
+		case *string:
+			vPtr = uintptr(unsafe.Pointer(syscall.StringBytePtr(*v)))
+		case bool:
+			vPtr = uintptr(unsafe.Pointer(&v))
+		case int:
+			vPtr = uintptr(v)
+		case int8:
+			vPtr = uintptr(v)
+		case uint8:
+			vPtr = uintptr(v)
+		case *uint8:
+			vPtr = uintptr(unsafe.Pointer(v))
+		case int16:
+			vPtr = uintptr(v)
+		case uint16:
+			vPtr = uintptr(v)
+		case *uint16:
+			vPtr = uintptr(unsafe.Pointer(v))
+		case int32:
+			vPtr = uintptr(v)
+		case uint32:
+			vPtr = uintptr(v)
+		case *uint32:
+			vPtr = uintptr(unsafe.Pointer(v))
+		case int64:
+			vPtr = uintptr(v)
+		case uint64:
+			vPtr = uintptr(v)
+		case *uint64:
+			vPtr = uintptr(unsafe.Pointer(v))
+		case float32:
+			vPtr = uintptr(v)
+		case float64:
+			vPtr = uintptr(v)
+		case []byte:
+			vPtr = uintptr(unsafe.Pointer(&v[0]))
+		case uintptr:
+			ptr, _ := param.(uintptr)
+			vPtr = ptr
+		default:
 			err = fmt.Errorf("unsupport convert type %v to uintptr", reflect.TypeOf(param))
 			return
 		}
