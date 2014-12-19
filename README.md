@@ -8,7 +8,7 @@ A windows dll call hellper
 package main
 
 import (
-    "github.com/igonow/dll_caller"
+    "github.com/gogap/dll_caller"
     "fmt"
 )
 
